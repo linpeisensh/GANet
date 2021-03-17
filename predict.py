@@ -149,7 +149,7 @@ if __name__ == "__main__":
             leftname = left_filenames[i]
             rightname = right_filenames[i]
 
-            savename = os.path.join(opt.save_path,"{0:06}.png".format(i))
+            savename = os.path.join(save_path,"{0:06}.png".format(i))
             test(leftname, rightname, savename)
             print('{} frame'.format(i))
     except:
