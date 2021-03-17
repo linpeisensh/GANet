@@ -4,20 +4,12 @@ import skimage
 import skimage.io
 import skimage.transform
 from PIL import Image
-from math import log10
+import traceback
 #from GCNet.modules.GCNet import L1Loss
-import sys
-import shutil
 import os
 import torch
-import torch.nn as nn
 import torch.nn.parallel
-import torch.backends.cudnn as cudnn
-import torch.optim as optim
 from torch.autograd import Variable
-from torch.utils.data import DataLoader
-#from models.GANet_deep import GANet
-from dataloader.data import get_test_set
 import numpy as np
 
 # Training settings
@@ -128,8 +120,7 @@ def test(leftname, rightname, savename):
         temp = temp[0, opt.crop_height - height: opt.crop_height, opt.crop_width - width: opt.crop_width]
     else:
         temp = temp[0, :, :]
-    # skimage.io.imsave(savename, (temp * 256).astype('uint16'))
-    np.save(savename, (temp * 256).astype('uint16'))
+    skimage.io.imsave(savename, (temp * 256).astype('uint16'))
 
 def load_images(path_to_sequence):
     timestamps = []
@@ -148,14 +139,19 @@ def load_images(path_to_sequence):
 
    
 if __name__ == "__main__":
-    file_path = os.path.join(opt.data_path,opt.sequence)
-    left_filenames, right_filenames, timestamps = load_images(file_path)
-    save_path = os.path.join(opt.save_path,opt.sequence)
-    for i in range(len(left_filenames)):
-        leftname = left_filenames[i]
-        rightname = right_filenames[i]
+    try:
+        file_path = os.path.join(opt.data_path,opt.sequence)
+        left_filenames, right_filenames, timestamps = load_images(file_path)
+        save_path = os.path.join(opt.save_path,opt.sequence)
+        print('sequence {}'.format(opt.sequence))
 
-        # savename = os.path.join(opt.save_path,"{0:06}.png".format(i))
-        savename = os.path.join(opt.save_path,"{0:06}".format(i))
-        test(leftname, rightname, savename)
+        for i in range(len(left_filenames)):
+            leftname = left_filenames[i]
+            rightname = right_filenames[i]
+
+            savename = os.path.join(opt.save_path,"{0:06}.png".format(i))
+            test(leftname, rightname, savename)
+            print('{} frame'.format(i))
+    except:
+        traceback.print_exc()
 
