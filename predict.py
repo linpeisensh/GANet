@@ -26,11 +26,8 @@ parser.add_argument('--crop_height', type=int, required=True, help="crop height"
 parser.add_argument('--crop_width', type=int, required=True, help="crop width")
 parser.add_argument('--max_disp', type=int, default=192, help="max disp")
 parser.add_argument('--resume', type=str, default='', help="resume from saved model")
-parser.add_argument('--cuda', type=bool, default=True, help='use cuda?')
-parser.add_argument('--kitti', type=int, default=0, help='kitti dataset? Default=False')
-parser.add_argument('--kitti2015', type=int, default=0, help='kitti 2015? Default=False')
 parser.add_argument('--data_path', type=str, required=True, help="data root")
-parser.add_argument('--test_list', type=str, required=True, help="training list")
+parser.add_argument('--sequence', type=str, required=True, help="data root")
 parser.add_argument('--save_path', type=str, default='./result/', help="location to save result")
 parser.add_argument('--model', type=str, default='GANet_deep', help="model to train")
 
@@ -45,10 +42,7 @@ elif opt.model == 'GANet_deep':
 else:
     raise Exception("No suitable model found ...")
     
-cuda = opt.cuda
-#cuda = True
-if cuda and not torch.cuda.is_available():
-    raise Exception("No GPU found, please run without --cuda")
+
 
 #torch.manual_seed(opt.seed)
 #if cuda:
@@ -59,8 +53,7 @@ if cuda and not torch.cuda.is_available():
 print('===> Building model')
 model = GANet(opt.max_disp)
 
-if cuda:
-    model = torch.nn.DataParallel(model).cuda()
+model = torch.nn.DataParallel(model).cuda()
 
 if opt.resume:
     if os.path.isfile(opt.resume):
@@ -123,9 +116,9 @@ def test(leftname, rightname, savename):
     input2 = Variable(input2, requires_grad = False)
 
     model.eval()
-    if cuda:
-        input1 = input1.cuda()
-        input2 = input2.cuda()
+
+    input1 = input1.cuda()
+    input2 = input2.cuda()
     with torch.no_grad():
         prediction = model(input1, input2)
      
@@ -135,23 +128,34 @@ def test(leftname, rightname, savename):
         temp = temp[0, opt.crop_height - height: opt.crop_height, opt.crop_width - width: opt.crop_width]
     else:
         temp = temp[0, :, :]
-    skimage.io.imsave(savename, (temp * 256).astype('uint16'))
+    # skimage.io.imsave(savename, (temp * 256).astype('uint16'))
+    np.save(savename, (temp * 256).astype('uint16'))
+
+def load_images(path_to_sequence):
+    timestamps = []
+    with open(os.path.join(path_to_sequence, 'times.txt')) as times_file:
+        for line in times_file:
+            if len(line) > 0:
+                timestamps.append(float(line))
+
+    return [
+        os.path.join(path_to_sequence, 'image_2', "{0:06}.png".format(idx))
+        for idx in range(len(timestamps))
+    ], [
+        os.path.join(path_to_sequence, 'image_3', "{0:06}.png".format(idx))
+        for idx in range(len(timestamps))
+    ], timestamps
 
    
 if __name__ == "__main__":
-    file_path = opt.data_path
-    file_list = opt.test_list
-    f = open(file_list, 'r')
-    filelist = f.readlines()
-    for index in range(len(filelist)):
-        current_file = filelist[index]
-        if opt.kitti2015:
-            leftname = file_path + 'image_2/' + current_file[0: len(current_file) - 1]
-            rightname = file_path + 'image_3/' + current_file[0: len(current_file) - 1]
-        if opt.kitti:
-            leftname = file_path + 'colored_0/' + current_file[0: len(current_file) - 1]
-            rightname = file_path + 'colored_1/' + current_file[0: len(current_file) - 1]
+    file_path = os.path.join(opt.data_path,opt.sequence)
+    left_filenames, right_filenames, timestamps = load_images(file_path)
+    save_path = os.path.join(opt.save_path,opt.sequence)
+    for i in range(len(left_filenames)):
+        leftname = left_filenames[i]
+        rightname = right_filenames[i]
 
-        savename = opt.save_path + current_file[0: len(current_file) - 1]
+        # savename = os.path.join(opt.save_path,"{0:06}.png".format(i))
+        savename = os.path.join(opt.save_path,"{0:06}".format(i))
         test(leftname, rightname, savename)
 
