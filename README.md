@@ -61,6 +61,7 @@ Step 2: download and prepare the dataset
     download and extract kitti and kitti2015 datasets.
         
 Step 3: Execute the following command.
+
 example:
 ```
 python predict.py --crop_height=384 --crop_width=1248 --max_disp=192 --data_path='/storage/remote/atcremers17/linp/dataset/kittic/sequences/' --resume='kitti2015_final.pth' --sequence='10'
