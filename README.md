@@ -60,7 +60,11 @@ Step 2: download and prepare the dataset
 	
     download and extract kitti and kitti2015 datasets.
         
-Step 3: revise parameter settings and run "train.sh" and "predict.sh" for training, finetuning and prediction/testing. Note that the “crop_width” and “crop_height” must be multiple of 48, "max_disp" must be multiple of 12 (default: 192).
+Step 3: Execute the following command.
+example:
+```
+python predict.py --crop_height=384 --crop_width=1248 --max_disp=192 --data_path='/storage/remote/atcremers17/linp/dataset/kittic/sequences/' --resume='kitti2015_final.pth' --sequence='10'
+```
 
 
 ## Pretrained models:
